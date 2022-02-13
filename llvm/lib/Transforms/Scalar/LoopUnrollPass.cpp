@@ -68,6 +68,11 @@ using namespace llvm;
 
 #define DEBUG_TYPE "loop-unroll"
 
+
+static cl::opt<std::string>
+    UnrollSpecificLoop("unroll-specific-loop", cl::value_desc("no_specific_loop"),
+                    cl::desc("Specific loop to unroll name"));
+
 static cl::opt<unsigned>
     UnrollThreshold("unroll-threshold", cl::Hidden,
                     cl::desc("The cost threshold for loop unrolling"));
@@ -704,6 +709,17 @@ static uint64_t getUnrolledLoopSize(
   return (uint64_t)(LoopSize - UP.BEInsns) * UP.Count + UP.BEInsns;
 }
 
+
+static std::string GetValueName(const Value *V) {
+  if (V) {
+    std::string name;
+    raw_string_ostream namestream(name);
+    V->printAsOperand(namestream, false);
+    return namestream.str();
+  } else
+    return "[null]";
+}
+
 // Returns true if unroll count was set explicitly.
 // Calculates unroll count and writes it to UP.Count.
 static bool computeUnrollCount(
@@ -722,8 +738,14 @@ static bool computeUnrollCount(
       return true;
   }
 
-  // 2nd priority is unroll count set by pragma.
+
   unsigned PragmaCount = UnrollCountPragmaValue(L);
+  
+  bool loop_to_unroll_via_opt = std::string(UnrollSpecificLoop.c_str()) != "no_specific_loop" and std::string(UnrollSpecificLoop.c_str()) != "" and std::string(UnrollSpecificLoop.c_str()) == L->getName().str();
+  if (loop_to_unroll_via_opt)
+    PragmaCount = 2;//this needs to be passed via opt as well
+
+  // 2nd priority is unroll count set by pragma.
   if (PragmaCount > 0) {
     UP.Count = PragmaCount;
     UP.Runtime = true;
