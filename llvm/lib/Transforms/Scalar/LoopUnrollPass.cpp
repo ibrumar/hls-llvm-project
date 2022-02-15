@@ -730,6 +730,7 @@ static bool computeUnrollCount(
   // Check for explicit Count.
   // 1st priority is unroll count set by "unroll-count" option.
   bool UserUnrollCount = UnrollCount.getNumOccurrences() > 0;
+  errs() << "Got to here 1 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   if (UserUnrollCount) {
     UP.Count = UnrollCount;
     UP.AllowExpensiveTripCount = true;
@@ -742,6 +743,8 @@ static bool computeUnrollCount(
   unsigned PragmaCount = UnrollCountPragmaValue(L);
   
   bool loop_to_unroll_via_opt = std::string(UnrollSpecificLoop.c_str()) != "no_specific_loop" and std::string(UnrollSpecificLoop.c_str()) != "" and std::string(UnrollSpecificLoop.c_str()) == L->getName().str();
+  errs() << "Figuring out whether to unroll loop " << L->getName().str() << " and the answer is " << loop_to_unroll_via_opt << "\n";
+  errs() << "The passed loop name was " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   if (loop_to_unroll_via_opt)
     PragmaCount = 2;//this needs to be passed via opt as well
 
@@ -979,6 +982,8 @@ static LoopUnrollResult tryToUnrollLoop(
     Optional<bool> ProvidedUpperBound, Optional<bool> ProvidedAllowPeeling) {
   DEBUG(dbgs() << "Loop Unroll: F[" << L->getHeader()->getParent()->getName()
                << "] Loop %" << L->getHeader()->getName() << "\n");
+
+  errs() << "Got to here 3 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   if (HasUnrollDisablePragma(L))
     return LoopUnrollResult::Unmodified;
   if (!L->isLoopSimplifyForm()) {
@@ -986,6 +991,7 @@ static LoopUnrollResult tryToUnrollLoop(
         dbgs() << "  Not unrolling loop which is not in loop-simplify form.\n");
     return LoopUnrollResult::Unmodified;
   }
+  errs() << "Got to here 4 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
 
   unsigned NumInlineCandidates;
   bool NotDuplicatable;
@@ -1061,6 +1067,7 @@ static LoopUnrollResult tryToUnrollLoop(
 
   // computeUnrollCount() decides whether it is beneficial to use upper bound to
   // fully unroll the loop.
+  errs() << "Got to here 2 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   bool UseUpperBound = false;
   bool IsCountSetExplicitly =
       computeUnrollCount(L, TTI, DT, LI, SE, &ORE, TripCount, MaxTripCount,
@@ -1117,8 +1124,10 @@ public:
   }
 
   bool runOnLoop(Loop *L, LPPassManager &LPM) override {
-    if (skipLoop(L))
-      return false;
+    
+    errs() << "Got to here 8 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
+    //if (skipLoop(L))
+    //  return false;
 
     Function &F = *L->getHeader()->getParent();
 
@@ -1134,6 +1143,7 @@ public:
     OptimizationRemarkEmitter ORE(&F);
     bool PreserveLCSSA = mustPreserveAnalysisID(LCSSAID);
 
+    errs() << "Got to here 7 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
     LoopUnrollResult Result = tryToUnrollLoop(
         L, DT, LI, SE, TTI, AC, ORE, PreserveLCSSA, OptLevel, ProvidedCount,
         ProvidedThreshold, ProvidedAllowPartial, ProvidedRuntime,
@@ -1210,6 +1220,7 @@ PreservedAnalyses LoopFullUnrollPass::run(Loop &L, LoopAnalysisManager &AM,
 
   std::string LoopName = L.getName();
 
+  errs() << "Got to here 6 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   bool Changed =
       tryToUnrollLoop(&L, AR.DT, &AR.LI, AR.SE, AR.TTI, AR.AC, *ORE,
                       /*PreserveLCSSA*/ true, OptLevel, /*Count*/ None,
@@ -1350,6 +1361,7 @@ PreservedAnalyses LoopUnrollPass::run(Function &F,
     if (PSI && PSI->hasHugeWorkingSetSize())
       AllowPeeling = false;
     std::string LoopName = L.getName();
+    errs() << "Got to here 5 " << std::string(UnrollSpecificLoop.c_str()) << "\n";
     LoopUnrollResult Result =
         tryToUnrollLoop(&L, DT, &LI, SE, TTI, AC, ORE,
                         /*PreserveLCSSA*/ true, OptLevel, /*Count*/ None,
