@@ -359,18 +359,21 @@ LoopUnrollResult llvm::UnrollLoop(
   BasicBlock *Preheader = L->getLoopPreheader();
   if (!Preheader) {
     DEBUG(dbgs() << "  Can't unroll; loop preheader-insertion failed.\n");
+    errs() << "  Can't unroll; loop preheader-insertion failed.\n";
     return LoopUnrollResult::Unmodified;
   }
 
   BasicBlock *LatchBlock = L->getLoopLatch();
   if (!LatchBlock) {
     DEBUG(dbgs() << "  Can't unroll; loop exit-block-insertion failed.\n");
+    errs() << "   Can't unroll; loop exit-block-insertion failed.\n\n";
     return LoopUnrollResult::Unmodified;
   }
 
   // Loops with indirectbr cannot be cloned.
   if (!AllowUnsafeClone && !L->isSafeToClone()) {
     DEBUG(dbgs() << "  Can't unroll; Loop body cannot be cloned.\n");
+    errs() << "   Can't unroll; Loop body cannot be cloned.\n\n";
     return LoopUnrollResult::Unmodified;
   }
 
@@ -385,6 +388,7 @@ LoopUnrollResult llvm::UnrollLoop(
     // The loop-rotate pass can be helpful to avoid this in many cases.
     DEBUG(dbgs() <<
              "  Can't unroll; loop not terminated by a conditional branch.\n");
+    errs() << "   Can't unroll; loop not terminated by a conditional branch.\n";
     return LoopUnrollResult::Unmodified;
   }
 
@@ -395,6 +399,9 @@ LoopUnrollResult llvm::UnrollLoop(
   if (!CheckSuccessors(0, 1) && !CheckSuccessors(1, 0)) {
     DEBUG(dbgs() << "Can't unroll; only loops with one conditional latch"
                     " exiting the loop can be unrolled\n");
+    
+    errs() << "Can't unroll; only loops with one conditional latch"
+                    " exiting the loop can be unrolled\n";
     return LoopUnrollResult::Unmodified;
   }
 
@@ -402,6 +409,9 @@ LoopUnrollResult llvm::UnrollLoop(
     // The loop-rotate pass can be helpful to avoid this in many cases.
     DEBUG(dbgs() <<
           "  Won't unroll loop: address of header block is taken.\n");
+    
+    errs() <<
+          "  Won't unroll loop: address of header block is taken.\n";
     return LoopUnrollResult::Unmodified;
   }
 
@@ -418,6 +428,7 @@ LoopUnrollResult llvm::UnrollLoop(
   // Don't enter the unroll code if there is nothing to do.
   if (TripCount == 0 && Count < 2 && PeelCount == 0) {
     DEBUG(dbgs() << "Won't unroll; almost nothing to do\n");
+    errs() << "Won't unroll; almost nothing to do\n";
     return LoopUnrollResult::Unmodified;
   }
 

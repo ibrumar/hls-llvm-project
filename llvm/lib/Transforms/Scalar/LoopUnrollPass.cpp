@@ -1072,19 +1072,23 @@ static LoopUnrollResult tryToUnrollLoop(
   bool IsCountSetExplicitly =
       computeUnrollCount(L, TTI, DT, LI, SE, &ORE, TripCount, MaxTripCount,
                          TripMultiple, LoopSize, UP, UseUpperBound);
+  errs() << "UP.Count is " << UP.Count << "\n";
   if (!UP.Count)
     return LoopUnrollResult::Unmodified;
   // Unroll factor (Count) must be less or equal to TripCount.
   if (TripCount && UP.Count > TripCount)
     UP.Count = TripCount;
 
+  errs() << "2. UP.Count is " << UP.Count << "\n";
   // Unroll the loop.
   LoopUnrollResult UnrollResult = UnrollLoop(
       L, UP.Count, TripCount, UP.Force, UP.Runtime, UP.AllowExpensiveTripCount,
       UseUpperBound, MaxOrZero, TripMultiple, UP.PeelCount, UP.UnrollRemainder,
       LI, &SE, &DT, &AC, &ORE, PreserveLCSSA);
-  if (UnrollResult == LoopUnrollResult::Unmodified)
+  if (UnrollResult == LoopUnrollResult::Unmodified) {
+    errs() << "Unmodified loop\n";
     return LoopUnrollResult::Unmodified;
+  }
 
   // If loop has an unroll count pragma or unrolled by explicitly set count
   // mark loop as unrolled to prevent unrolling beyond that requested.
