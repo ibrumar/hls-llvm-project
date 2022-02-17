@@ -384,6 +384,8 @@ LoopUnrollResult llvm::UnrollLoop(
   BasicBlock *Header = L->getHeader();
   BranchInst *BI = dyn_cast<BranchInst>(LatchBlock->getTerminator());
 
+  errs() << "The latch block that is supposed to contain a conditional is " << LatchBlock->getName() << "\n";
+
   if (!BI || BI->isUnconditional()) {
     // The loop-rotate pass can be helpful to avoid this in many cases.
     DEBUG(dbgs() <<
@@ -392,6 +394,8 @@ LoopUnrollResult llvm::UnrollLoop(
     return LoopUnrollResult::Unmodified;
   }
 
+
+  //Iulian: if previous code is commented out, getSuccessor(S2) in the next line will fail
   auto CheckSuccessors = [&](unsigned S1, unsigned S2) {
     return BI->getSuccessor(S1) == Header && !L->contains(BI->getSuccessor(S2));
   };
