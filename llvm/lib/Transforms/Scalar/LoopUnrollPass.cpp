@@ -70,6 +70,10 @@ using namespace llvm;
 
 
 static cl::opt<std::string>
+    ParamUnrollFactor("param-unroll-factor", cl::init("-1"), cl::Hidden,
+                      cl::desc("The unrolling factor parameter"));
+
+static cl::opt<std::string>
     UnrollSpecificLoop("unroll-specific-loop", cl::value_desc("no_specific_loop"),
                     cl::desc("Specific loop to unroll name"));
 
@@ -742,8 +746,8 @@ static bool computeUnrollCount(
 
   unsigned PragmaCount = UnrollCountPragmaValue(L);
   
-  bool loop_to_unroll_via_opt = std::string(UnrollSpecificLoop.c_str()) != "no_specific_loop" and std::string(UnrollSpecificLoop.c_str()) != "" and std::string(UnrollSpecificLoop.c_str()) == L->getName().str();
-  errs() << "Figuring out whether to unroll loop " << L->getName().str() << " and the answer is " << loop_to_unroll_via_opt << "\n";
+  bool loop_to_unroll_via_opt = std::string(UnrollSpecificLoop.c_str()) != "no_specific_loop" and std::string(UnrollSpecificLoop.c_str()) != "" and std::string(UnrollSpecificLoop.c_str()) == L->getLoopPreheader()->getName().str();
+  errs() << "Figuring out whether to unroll loop " << L->getLoopPreheader()->getName().str() << " starting from preheader and the answer is " << loop_to_unroll_via_opt << "\n";
   errs() << "The passed loop name was " << std::string(UnrollSpecificLoop.c_str()) << "\n";
   if (loop_to_unroll_via_opt)
     PragmaCount = 2;//this needs to be passed via opt as well
